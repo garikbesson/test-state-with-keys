@@ -1,8 +1,8 @@
-use near_sdk::borsh::{self, BorshSerialize};
+use near_sdk::borsh::{self};
 use near_sdk::env::{storage_read, storage_write};
 // Find all our documentation at https://docs.near.org
 use near_sdk::json_types::U64;
-use near_sdk::{env, log, near, require, AccountId, NearToken, PanicOnDefault, Promise};
+use near_sdk::{env, near, require, AccountId, NearToken, Promise};
 
 #[near(serializers = [json, borsh])]
 #[derive(Clone)]
@@ -12,18 +12,12 @@ pub struct Bid {
 }
 
 #[near(contract_state)]
-#[derive(PanicOnDefault)]
-pub struct Contract {
-    highest_bid: Bid,
-    auction_end_time: U64,
-    auctioneer: AccountId,
-    claimed: bool,
-}
+#[derive(Default)]
+pub struct Contract { }
 
 #[near]
 impl Contract {
     #[init]
-    #[private] // only callable by the contract's account
     pub fn init(end_time: U64, auctioneer: AccountId) -> Self {
         let highest_bid = Bid {
             bidder: env::current_account_id(),
@@ -34,44 +28,11 @@ impl Contract {
         storage_write(b"auctioneer", &borsh::to_vec(&auctioneer).unwrap());
         storage_write(b"claimed", &borsh::to_vec(&false).unwrap());
 
-        Self {
-            highest_bid,
-            auction_end_time: end_time,
-            claimed: false,
-            auctioneer,
-        }
+        Self {}
     }
 
     #[payable]
-    pub fn bid_1(&mut self) -> Promise {
-        // Assert the auction is still ongoing
-        require!(
-            env::block_timestamp() < self.auction_end_time.into(),
-            "Auction has ended"
-        );
-
-        // Current bid
-        let bid = env::attached_deposit();
-        let bidder = env::predecessor_account_id();
-
-        // Last bid
-        let Bid {
-            bidder: last_bidder,
-            bid: last_bid,
-        } = self.highest_bid.clone();
-
-        // Check if the deposit is higher than the current bid
-        require!(bid > last_bid, "You must place a higher bid");
-
-        // Update the highest bid
-        self.highest_bid = Bid { bidder, bid };
-
-        // Transfer tokens back to the last bidder
-        Promise::new(last_bidder).transfer(last_bid)
-    }
-
-    #[payable]
-    pub fn bid_2(&mut self) -> Promise {
+    pub fn bid(&mut self) -> Promise {
         // Assert the auction is still ongoing
         let auction_end_time: U64 =
             borsh::from_slice(&storage_read(b"auction_end_time").unwrap()).unwrap();
@@ -104,20 +65,7 @@ impl Contract {
         Promise::new(last_bidder).transfer(last_bid)
     }
 
-    pub fn claim_1(&mut self) -> Promise {
-        require!(
-            env::block_timestamp() > self.auction_end_time.into(),
-            "Auction has not ended yet"
-        );
-
-        require!(!self.claimed, "Auction has already been claimed");
-        self.claimed = true;
-
-        // Transfer tokens to the auctioneer
-        Promise::new(self.auctioneer.clone()).transfer(self.highest_bid.bid)
-    }
-
-    pub fn claim_2(&mut self) -> Promise {
+    pub fn claim(&mut self) -> Promise {
         let auction_end_time: U64 =
             borsh::from_slice(&storage_read(b"auction_end_time").unwrap()).unwrap();
         require!(
@@ -138,19 +86,19 @@ impl Contract {
     }
 
     pub fn get_highest_bid(&self) -> Bid {
-        self.highest_bid.clone()
+        borsh::from_slice(&storage_read(b"highest_bid").unwrap()).unwrap()
     }
 
     pub fn get_auction_end_time(&self) -> U64 {
-        self.auction_end_time
+        borsh::from_slice(&storage_read(b"auction_end_time").unwrap()).unwrap()
     }
 
     pub fn get_auctioneer(&self) -> AccountId {
-        self.auctioneer.clone()
+        borsh::from_slice(&storage_read(b"auctioneer").unwrap()).unwrap()
     }
 
     pub fn get_claimed(&self) -> bool {
-        self.claimed
+        borsh::from_slice(&storage_read(b"claimed").unwrap()).unwrap()
     }
 }
 
