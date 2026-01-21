@@ -18,7 +18,15 @@ pub struct Bid {
 #[near(contract_state)]
 #[derive(Default)]
 pub struct Contract { 
-    // we don't want stuff here
+    // we do want stuff here
+    highest_bid: Bid,
+    auction_end_time: U64,
+    auctioneer: AccountId,
+    claimed: bool,
+    // vector: Vector<u64>,
+    // sdk_vector: Vector<u64>,
+    // map: std::collections::HashMap<AccountId, u64>,
+    // sdk_map: near_sdk::store::LookupMap<AccountId, u64>,
 }
 
 #[near]
@@ -29,23 +37,20 @@ impl Contract {
             bidder: env::current_account_id(),
             bid: NearToken::from_yoctonear(1),
         };
-        storage_write(b"highest_bid", &borsh::to_vec(&highest_bid).unwrap());
-        storage_write(b"auction_end_time", &borsh::to_vec(&end_time).unwrap());
-        storage_write(b"auctioneer", &borsh::to_vec(&auctioneer).unwrap());
-        storage_write(b"claimed", &borsh::to_vec(&false).unwrap());
-        // storage_write(b"vector", &borsh::to_vec([1,2,3,4]).unwrap());
-        // storage_write(b"sdk_vector", &borsh::to_vec(Vector([1,2,3,4])).unwrap());
-        // storage_write(b"map", &borsh::to_vec({}).unwrap());
-        // storage_write(b"map", &borsh::to_vec({}).unwrap());
 
-        Self {}
+        Self {
+            highest_bid,
+            auction_end_time: end_time,
+            auctioneer,
+            claimed: false,
+        }
     }
 
     #[payable]
     pub fn bid(&mut self) -> Promise {
         // Assert the auction is still ongoing
         let auction_end_time: U64 =
-            borsh::from_slice(&storage_read(b"auction_end_time").unwrap()).unwrap();
+            self.auction_end_time;
         require!(
             env::block_timestamp() < auction_end_time.0,
             "Auction has ended"

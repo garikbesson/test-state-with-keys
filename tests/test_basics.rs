@@ -47,7 +47,7 @@ async fn test_contract_is_operational() -> testresult::TestResult<()> {
         .assert_success();
 
     // Alice makes first bid
-    contract
+    let function = contract
         .call_function("bid", ())
         .transaction()
         .deposit(NearToken::from_near(1))
