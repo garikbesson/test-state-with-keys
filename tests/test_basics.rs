@@ -446,6 +446,30 @@ async fn test_difference_between_contracts() -> testresult::TestResult<()> {
                 > fill_sdk_iterable_map_default_contract_result.total_gas_burnt)
     );
 
+    // Get the storage locked for our custom state contract
+    let contract_storage_locked = contract_account
+        .tokens()
+        .near_balance()
+        .fetch_from(&sandbox_network)
+        .await?
+        .storage_locked;
+    println!(
+        "final_contract_storage_locked: {:?}",
+        contract_storage_locked.as_millinear()
+    );
+
+    // Get the storage locked for default contract
+    let default_contract_storage_locked = default_contract_account
+        .tokens()
+        .near_balance()
+        .fetch_from(&sandbox_network)
+        .await?
+        .storage_locked;
+    println!(
+        "final_default_contract_storage_locked: {:?}\n",
+        default_contract_storage_locked.as_millinear()
+    );
+
     Ok(())
 }
 
