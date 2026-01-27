@@ -264,7 +264,7 @@ async fn test_difference_between_contracts() -> testresult::TestResult<()> {
         .storage_locked;
     println!(
         "contract_storage_locked: {:?}",
-        contract_storage_locked.as_millinear()
+        contract_storage_locked.exact_amount_display()
     );
 
     // Get the storage locked for default contract
@@ -276,7 +276,7 @@ async fn test_difference_between_contracts() -> testresult::TestResult<()> {
         .storage_locked;
     println!(
         "default_contract_storage_locked: {:?}\n",
-        default_contract_storage_locked.as_millinear()
+        default_contract_storage_locked.exact_amount_display()
     );
 
     // Alice makes first bid in our custom state contract
@@ -455,7 +455,7 @@ async fn test_difference_between_contracts() -> testresult::TestResult<()> {
         .storage_locked;
     println!(
         "final_contract_storage_locked: {:?}",
-        contract_storage_locked.as_millinear()
+        contract_storage_locked.exact_amount_display()
     );
 
     // Get the storage locked for default contract
@@ -467,7 +467,7 @@ async fn test_difference_between_contracts() -> testresult::TestResult<()> {
         .storage_locked;
     println!(
         "final_default_contract_storage_locked: {:?}\n",
-        default_contract_storage_locked.as_millinear()
+        default_contract_storage_locked.exact_amount_display()
     );
 
     Ok(())
